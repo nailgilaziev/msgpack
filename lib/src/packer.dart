@@ -30,7 +30,7 @@ class Packer {
     _d = ByteData.view(_buf.buffer, _buf.offsetInBytes);
     _offset = 0;
   }
-
+  int get offset => _offset;
   final _builder = BytesBuilder(copy: false);
   final _strCodec = const Utf8Codec();
 
