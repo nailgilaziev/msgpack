@@ -21,6 +21,7 @@ class Unpacker {
 
   final _strCodec = const Utf8Codec();
 
+  int get offset=>_offset;
   /// Unpack value if it exist. Otherwise returns `null`.
   ///
   /// Throws [FormatException] if value is not a bool,
