@@ -1,6 +1,17 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+// dart2js doesn't support 64 bit ints, so we pack using 2x 32 bit ints.
+void _setUint64(ByteData d, int offset, int v) {
+  d.setUint32(offset, v >> 32);
+  d.setUint32(offset + 4, v & 0xFFFFFFFF);
+}
+
+void _setInt64(ByteData d, int offset, int v) {
+  d.setInt32(offset, v >> 32);
+  d.setUint32(offset + 4, v & 0xFFFFFFFF);
+}
+
 /// Streaming API for packing (serializing) data to msgpack binary format.
 ///
 /// Packer provide API for manually packing your data item by item in serial / streaming manner.
@@ -72,6 +83,7 @@ class Packer {
   }
 
   /// Pack [bool] or `null`.
+  // ignore: avoid_positional_boolean_parameters
   void packBool(bool? v) {
     if (_buf.length - _offset < 1) _nextBuf();
     if (v == null) {
@@ -103,7 +115,7 @@ class Packer {
         _offset += 4;
       } else {
         _d.setUint8(_offset++, 0xcf);
-        _d.setUint64(_offset, v);
+        _setUint64(_d, _offset, v);
         _offset += 8;
       }
     } else if (v >= -32) {
@@ -121,7 +133,7 @@ class Packer {
       _offset += 4;
     } else {
       _d.setUint8(_offset++, 0xd3);
-      _d.setInt64(_offset, v);
+      _setInt64(_d, _offset, v);
       _offset += 8;
     }
   }
@@ -183,10 +195,11 @@ class Packer {
   /// Convenient when you not distinguish between empty [String] and null on msgpack wire.
   /// See [packString] method documentation for more details.
   void packStringEmptyIsNull(String? v) {
-    if (v == null || v.isEmpty)
+    if (v == null || v.isEmpty) {
       packNull();
-    else
+    } else {
       packString(v);
+    }
   }
 
   /// Pack `List<int>` or null.
