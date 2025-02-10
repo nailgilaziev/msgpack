@@ -1,6 +1,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+// dart2js doesn't support 64 bit ints, so we unpack using 2x 32 bit ints.
+int _getUint64(ByteData d, int offset) =>
+    (d.getUint32(offset) << 32) | d.getUint32(offset + 4);
+
+int _getInt64(ByteData d, int offset) =>
+    (d.getInt32(offset) << 32) | d.getUint32(offset + 4);
+
 /// Streaming API for unpacking (deserializing) data from msgpack binary format.
 ///
 /// unpackXXX methods returns value if it exist, or `null`.
@@ -62,7 +69,7 @@ class Unpacker {
       v = _d.getUint32(++_offset);
       _offset += 4;
     } else if (b == 0xcf) {
-      v = _d.getUint64(++_offset);
+      v = _getUint64(_d, ++_offset);
       _offset += 8;
     } else if (b == 0xd0) {
       v = _d.getInt8(++_offset);
@@ -74,7 +81,7 @@ class Unpacker {
       v = _d.getInt32(++_offset);
       _offset += 4;
     } else if (b == 0xd3) {
-      v = _d.getInt64(++_offset);
+      v = _getInt64(_d, ++_offset);
       _offset += 8;
     } else if (b == 0xc0) {
       v = null;
